@@ -681,7 +681,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1286406410}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1000, y: 2.932, z: 1000}
+  m_LocalPosition: {x: 1000, y: 9, z: 1000}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -775,7 +775,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1623394919}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1000, y: 2.5620003, z: 1000}
+  m_LocalPosition: {x: 1000, y: 9, z: 1000}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -813,49 +813,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   terrainMesh: {fileID: 1268908802}
-  terrainSize: {x: 2000, y: 2000}
-  groundHeightPercent: 0.02
+  terrainSize: 2000
+  groundHeightPercent: 0.04
   minBetweenPercent: 0.02
-  maxBetweenPercent: 0.2
+  maxBetweenPercent: 0.25
   perlinNoise:
     MinPerlinNoiseValue: 0
-    MaxPerlinNoiseValue: 93.698296
-    xScale: 0.005
+    MaxPerlinNoiseValue: 172.19717
+    xScale: 0.002
     xCoordOffset: 0
-    zScale: 0.005
+    zScale: 0.002
     zCoordOffset: 0
-    yScale: 100
-    scaleMultiplier: 5
-  gradient:
-    serializedVersion: 2
-    key0: {r: 0.2947668, g: 0.4954726, b: 0.9056604, a: 1}
-    key1: {r: 0.20185119, g: 0.6792453, b: 0.2942281, a: 1}
-    key2: {r: 0.3207547, g: 0.29182866, b: 0.26174796, a: 0}
-    key3: {r: 0.24528301, g: 0.24231894, b: 0.23487005, a: 0}
-    key4: {r: 1, g: 1, b: 1, a: 0}
-    key5: {r: 1, g: 1, b: 1, a: 0}
-    key6: {r: 1, g: 1, b: 1, a: 0}
-    key7: {r: 1, g: 1, b: 1, a: 0}
-    ctime0: 655
-    ctime1: 1290
-    ctime2: 43260
-    ctime3: 53857
-    ctime4: 60934
-    ctime5: 65535
-    ctime6: 65535
-    ctime7: 65535
-    atime0: 0
-    atime1: 65535
-    atime2: 0
-    atime3: 0
-    atime4: 0
-    atime5: 0
-    atime6: 0
-    atime7: 0
-    m_Mode: 0
-    m_ColorSpace: 0
-    m_NumColorKeys: 6
-    m_NumAlphaKeys: 2
+    yScale: 200
+    scaleMultiplier: 3
+  terrainLayerHeightPos:
+  - 0.015
+  - 0.05
+  - 0.35
+  - 0.8
+  - 1
 --- !u!4 &1954059258
 Transform:
   m_ObjectHideFlags: 0
