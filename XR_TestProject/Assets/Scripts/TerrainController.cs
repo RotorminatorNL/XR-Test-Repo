@@ -3,7 +3,6 @@ using UnityEngine;
 [System.Serializable]
 public class TerrainController : MonoBehaviour
 {
-    //[SerializeField] private MeshGenerator meshGenerator;
     [SerializeField] private Terrain terrainMesh;
     [SerializeField] private int terrainSize = 1000;
 
@@ -14,10 +13,21 @@ public class TerrainController : MonoBehaviour
     [Space(10)]
     [SerializeField] private PerlinNoise perlinNoise;
     [Space(10)]
-    [SerializeField, Range(0f,1f)] private float[] terrainLayerHeightPos;
+    [SerializeField] private TerrainLayerData[] terrainLayerData;
 
     private int xLength;
     private int zLength;
+
+    public void ResetTerrainLayerData()
+    {
+        TerrainLayer[] terrainLayers = terrainMesh.terrainData.terrainLayers;
+
+        if (terrainLayers.Length != terrainLayerData.Length)
+        {
+            terrainLayerData = new TerrainLayerData[terrainLayers.Length];
+            for (int i = 0; i < terrainLayers.Length; i++) terrainLayerData[i] = new TerrainLayerData(i, terrainLayerData.Length, terrainLayers[i].name, 0f, 0f);
+        }
+    }
 
     public void GenerateTerrain()
     {
@@ -34,28 +44,7 @@ public class TerrainController : MonoBehaviour
         terrainData.alphamapResolution = xLength;
         terrainData.SetHeights(0, 0, heightmap);
 
-        float[,,] alphaMap = terrainData.GetAlphamaps(0, 0, terrainData.alphamapWidth, terrainData.alphamapHeight);
-
-        for (int y = 0; y < terrainData.alphamapHeight; y++)
-        {
-            for (int x = 0; x < terrainData.alphamapWidth; x++)
-            {
-                for (int i = 0; i < terrainData.terrainLayers.Length; i++) alphaMap[x, y, i] = 0f;
-
-                float heightValue = heightmap[x, y];
-
-                for (int i = 0; i < terrainLayerHeightPos.Length; i++)
-                {
-                    if (terrainLayerHeightPos[i] >= heightValue)
-                    {
-                        alphaMap[x, y, i] = 1f;
-                        break;
-                    }
-                }
-            }
-        }
-
-        terrainData.SetAlphamaps(0, 0, alphaMap);
+        terrainData.SetAlphamaps(0, 0, GetAlphamap(terrainData, heightmap));
         terrainMesh.Flush();
     }
 
@@ -67,10 +56,57 @@ public class TerrainController : MonoBehaviour
         {
             for (int x = 0; x < xLength; x++)
             {
-                result[x,z] = Mathf.InverseLerp(perlinNoise.MinPerlinNoiseValue, perlinNoise.MaxPerlinNoiseValue, heightValues[x,z]);
+                result[x, z] = Mathf.InverseLerp(perlinNoise.MinPerlinNoiseValue, perlinNoise.MaxPerlinNoiseValue, heightValues[x, z]);
             }
         }
 
         return result;
+    }
+
+    private float[,,] GetAlphamap(TerrainData terrainData, float[,] heightmap)
+    {
+        float[,,] alphaMap = terrainData.GetAlphamaps(0, 0, terrainData.alphamapWidth, terrainData.alphamapHeight);
+
+        for (int y = 0; y < terrainData.alphamapHeight; y++)
+        {
+            for (int x = 0; x < terrainData.alphamapWidth; x++)
+            {
+                for (int i = 0; i < terrainData.terrainLayers.Length; i++) alphaMap[x, y, i] = 0f;
+
+                float heightValue = heightmap[x, y];
+
+                for (int i = 0; i < terrainLayerData.Length; i++)
+                {
+                    if (i == 0 && terrainLayerData[i].HeightPosition >= heightValue)
+                    {
+                        alphaMap[x, y, i] = 1f;
+                        break;
+                    }
+                    else if (i + 1 == terrainLayerData.Length && terrainLayerData[i - 1].HeightPosition < heightValue) break;
+                    else if (terrainLayerData[i].HeightPosition < heightValue && terrainLayerData[i + 1].HeightPosition >= heightValue) 
+                    {
+                        float tempHeight1 = terrainLayerData[i].HeightPosition;
+                        float tempHeight2 = terrainLayerData[i + 1].HeightPosition;
+                        float heightDifference = tempHeight2 - tempHeight1;
+                        float minBlendHeight = tempHeight1;
+                        float maxBlendHeight = tempHeight1 + (heightDifference * terrainLayerData[i].BlendPercent);
+
+                        if (minBlendHeight != maxBlendHeight)
+                        {
+                            float alpha = Mathf.InverseLerp(minBlendHeight, maxBlendHeight, heightValue);
+                            alphaMap[x, y, i] = 1 - alpha;
+                            alphaMap[x, y, i + 1] = alpha;
+                            break;
+                        }
+
+                        alphaMap[x, y, i] = 0;
+                        alphaMap[x, y, i + 1] = 1;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return alphaMap;
     }
 }

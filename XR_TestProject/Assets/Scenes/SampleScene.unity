@@ -813,25 +813,45 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   terrainMesh: {fileID: 1268908802}
-  terrainSize: 2000
+  terrainSize: 500
   groundHeightPercent: 0.04
   minBetweenPercent: 0.02
   maxBetweenPercent: 0.25
   perlinNoise:
     MinPerlinNoiseValue: 0
-    MaxPerlinNoiseValue: 172.19717
+    MaxPerlinNoiseValue: 116.36641
     xScale: 0.002
     xCoordOffset: 0
     zScale: 0.002
     zCoordOffset: 0
     yScale: 200
     scaleMultiplier: 3
-  terrainLayerHeightPos:
-  - 0.015
-  - 0.05
-  - 0.35
-  - 0.8
-  - 1
+  terrainLayerData:
+  - terrainLayerArrayIndex: 0
+    terrainLayerArrayLength: 5
+    terrainLayerName: WaterColor
+    HeightPosition: 0.03
+    BlendPercent: 0.526
+  - terrainLayerArrayIndex: 1
+    terrainLayerArrayLength: 5
+    terrainLayerName: GrassColor
+    HeightPosition: 0.05
+    BlendPercent: 0.183
+  - terrainLayerArrayIndex: 2
+    terrainLayerArrayLength: 5
+    terrainLayerName: DirtColor
+    HeightPosition: 0.35
+    BlendPercent: 0.1
+  - terrainLayerArrayIndex: 3
+    terrainLayerArrayLength: 5
+    terrainLayerName: StoneColor
+    HeightPosition: 0.686
+    BlendPercent: 0.512
+  - terrainLayerArrayIndex: 4
+    terrainLayerArrayLength: 5
+    terrainLayerName: SnowColor
+    HeightPosition: 1
+    BlendPercent: 0
 --- !u!4 &1954059258
 Transform:
   m_ObjectHideFlags: 0
