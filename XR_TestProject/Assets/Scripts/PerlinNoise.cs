@@ -3,8 +3,8 @@ using UnityEngine;
 [System.Serializable]
 public class PerlinNoise
 {
-    [HideInInspector] public float MinPerlinNoiseValue;
-    [HideInInspector] public float MaxPerlinNoiseValue;
+    [HideInInspector] public float MinPerlinNoiseValue = 0;
+    [HideInInspector] public float MaxPerlinNoiseValue => yScale;
 
     [SerializeField, Range(0.001f, 1f)] private float xScale = 0.005f;
     [SerializeField] private float xCoordOffset = 0f;
@@ -13,96 +13,92 @@ public class PerlinNoise
     [SerializeField] private float zCoordOffset = 0f;
     [Space(10)]
     [SerializeField, Min(0)] private float yScale = 100f;
-    [SerializeField, Min(0)] private float scaleMultiplier = 2f;
 
     private float[,] perlinNoiseValues;
     private int xLength;
     private int zLength;
 
-    public float[,] GetHeightValues(int xLength, int zLength, Vector3 flatAreaSettings)
+    private int gridXLength;
+    private int gridZLength;
+    private int cellSize;
+    private int cellWallSize;
+    private int slopeAngle;
+
+    public float[,] GetHeightValues(int xLength, int zLength, int cellSize, int cellWallSize, int slopeAngle)
     {
-        perlinNoiseValues = new float[(xLength + 1), (zLength + 1)];
+        perlinNoiseValues = new float[xLength, zLength];
         this.xLength = xLength;
         this.zLength = zLength;
 
-        GenerateHeightValues(xLength, zLength);
-        GenerateMinMaxPerlinNoiseValues();
-        ApplyScaleMultiplier();
-        GenerateMinMaxPerlinNoiseValues();
-        ApplyFlatAreaSettings(flatAreaSettings);
+        gridXLength = xLength / cellSize;
+        gridZLength = zLength / cellSize;
+        this.cellSize = cellSize;
+        this.cellWallSize = cellWallSize;
+        this.slopeAngle = slopeAngle;
+
+        GenerateHeightValues();
 
         return perlinNoiseValues;
     }
 
-    private void GenerateHeightValues(int xLength, int zLength)
+    private void GenerateHeightValues()
     {
-        for (int z = 0; z <= zLength; z++)
+        for (int z = 0; z < gridZLength; z++)
         {
-            for (int x = 0; x <= xLength; x++)
+            for (int x = 0; x < gridXLength; x++)
             {
-                float perlinNoiseXCoord = x * xScale + xCoordOffset;
-                float perlinNoiseZCoord = z * zScale + zCoordOffset;
-                perlinNoiseValues[x, z] = Mathf.PerlinNoise(perlinNoiseXCoord, perlinNoiseZCoord);
+                for (int cellZLength = 0; cellZLength < cellSize; cellZLength++)
+                {
+                    for (int cellXLength = 0; cellXLength < cellSize; cellXLength++)
+                    {
+                        int newX = x * cellSize + cellXLength;
+                        int newZ = z * cellSize + cellZLength;
+
+                        perlinNoiseValues[newX, newZ] = GetHeightValue(cellXLength, cellZLength);
+                    }
+                }
             }
         }
     }
 
-    private void GenerateMinMaxPerlinNoiseValues()
+    private float GetHeightValue(int x, int z)
     {
-        MinPerlinNoiseValue = float.MaxValue;
-        MaxPerlinNoiseValue = float.MinValue;
+        int cellBottomLeftStart = cellWallSize;
+        int cellBottomLeftEnd = cellWallSize + slopeAngle;
+        int cellTopRightStart = cellSize - cellWallSize - slopeAngle;
+        int cellTopRightEnd = cellSize - cellWallSize;
 
-        for (int z = 0; z <= zLength; z++)
+        if (x < cellBottomLeftStart || x >= cellTopRightEnd || z < cellBottomLeftStart || z >= cellTopRightEnd) return 1;
+
+        float result = 0;
+
+        if (z < cellBottomLeftEnd) 
         {
-            for (int x = 0; x <= xLength; x++)
-            {
-                float value = perlinNoiseValues[x, z];
-                if (value < MinPerlinNoiseValue) MinPerlinNoiseValue = value;
-                if (value > MaxPerlinNoiseValue) MaxPerlinNoiseValue = value;
-            }
-        }
-    }
+            result = 1f - Mathf.InverseLerp(cellBottomLeftStart - 1, cellBottomLeftEnd, z);
 
-    private void ApplyScaleMultiplier()
-    {
-        for (int z = 0; z <= zLength; z++)
+            float newResult = 0;
+            if (x < cellBottomLeftEnd) newResult = 1f - Mathf.InverseLerp(cellBottomLeftStart - 1, cellBottomLeftEnd, x);
+            if (x >= cellTopRightStart) newResult = Mathf.InverseLerp(cellTopRightStart - 1, cellTopRightEnd, x);
+            result = newResult >= result ? newResult : result;
+        }
+        else if (z >= cellTopRightStart)
         {
-            for (int x = 0; x <= xLength; x++)
-            {
-                float valueInversed = Mathf.InverseLerp(MinPerlinNoiseValue, MaxPerlinNoiseValue, perlinNoiseValues[x, z]);
-                perlinNoiseValues[x, z] *= Mathf.Pow(valueInversed, scaleMultiplier) * yScale;
-            } 
+            result = Mathf.InverseLerp(cellTopRightStart - 1, cellTopRightEnd, z);
+
+            float newResult = 0;
+            if (x < cellBottomLeftEnd) newResult = 1f - Mathf.InverseLerp(cellBottomLeftStart - 1, cellBottomLeftEnd, x);
+            if (x >= cellTopRightStart) newResult = Mathf.InverseLerp(cellTopRightStart - 1, cellTopRightEnd, x);
+            result = newResult >= result ? newResult : result;
         }
-    }
-
-    private void ApplyFlatAreaSettings(Vector3 flatAreaSettings)
-    {
-        float minGroundHeight = (MaxPerlinNoiseValue - MinPerlinNoiseValue) * flatAreaSettings.x + MinPerlinNoiseValue;
-        float maxGroundHeight = (MaxPerlinNoiseValue - MinPerlinNoiseValue) * flatAreaSettings.z + MinPerlinNoiseValue;
-        float groundHeight = (MaxPerlinNoiseValue - MinPerlinNoiseValue) * flatAreaSettings.y + MinPerlinNoiseValue;
-
-        for (int z = 0; z <= zLength; z++)
+        else if (x < cellBottomLeftEnd)
         {
-            for (int x = 0; x <= xLength; x++)
-            {
-                float value = perlinNoiseValues[x, z];
-                if (value > maxGroundHeight)
-                {
-                    float valueInversed = Mathf.InverseLerp(maxGroundHeight, MaxPerlinNoiseValue, value);
-                    float newValue = (MaxPerlinNoiseValue - groundHeight) * valueInversed + groundHeight;
-                    perlinNoiseValues[x, z] = newValue;
-                }
-                else if (value < minGroundHeight)
-                {
-                    float valueInversed = Mathf.InverseLerp(MinPerlinNoiseValue, minGroundHeight, value);
-                    float newValue = (groundHeight - MinPerlinNoiseValue) * valueInversed;
-                    perlinNoiseValues[x, z] = newValue;
-                }
-                else
-                {
-                    perlinNoiseValues[x, z] = groundHeight;
-                }
-            }
+            result = 1f - Mathf.InverseLerp(cellBottomLeftStart - 1, cellBottomLeftEnd, x);
         }
+        else if (x >= cellTopRightStart)
+        {   
+            result = Mathf.InverseLerp(cellTopRightStart - 1, cellTopRightEnd, x);
+        }
+
+        return result;
     }
 }

@@ -3,13 +3,16 @@ using UnityEngine;
 [System.Serializable]
 public class TerrainController : MonoBehaviour
 {
+    public float TerrainLayerDataLength => terrainLayerData.Length;
+
     [SerializeField] private Terrain terrainMesh;
     [SerializeField] private int terrainSize = 1000;
 
-    [Header("Flat area settings")]
-    [SerializeField, Range(0f, 1f)] private float groundHeightPercent = 0.02f;
-    [SerializeField, Range(0f, 1f)] private float minBetweenPercent = 0.02f;
-    [SerializeField, Range(0f, 1f)] private float maxBetweenPercent = 0.25f;
+    [Header("Grid settings")]
+    [SerializeField] private int cellSize = 20;
+    [SerializeField] private int cellWallSize = 5;
+    [SerializeField] private int slopeAngle = 3;
+
     [Space(10)]
     [SerializeField] private PerlinNoise perlinNoise;
     [Space(10)]
@@ -21,24 +24,20 @@ public class TerrainController : MonoBehaviour
     public void ResetTerrainLayerData()
     {
         TerrainLayer[] terrainLayers = terrainMesh.terrainData.terrainLayers;
-
-        if (terrainLayers.Length != terrainLayerData.Length)
-        {
-            terrainLayerData = new TerrainLayerData[terrainLayers.Length];
-            for (int i = 0; i < terrainLayers.Length; i++) terrainLayerData[i] = new TerrainLayerData(i, terrainLayerData.Length, terrainLayers[i].name, 0f, 0f);
-        }
+        terrainLayerData = new TerrainLayerData[terrainLayers.Length];
+        for (int i = 0; i < terrainLayers.Length; i++) 
+            terrainLayerData[i] = new TerrainLayerData(i, terrainLayerData.Length, terrainLayers[i].name, (i + 1f) / terrainLayers.Length, 0.25f);
     }
 
     public void GenerateTerrain()
     {
         TerrainData terrainData = terrainMesh.terrainData;
-        Vector3 flatAreaSettings = new(minBetweenPercent, groundHeightPercent, maxBetweenPercent);
 
         terrainData.heightmapResolution = terrainSize;
         xLength = terrainData.heightmapResolution;
         zLength = terrainData.heightmapResolution;
 
-        float[,] heightmap = GetHeightmap(perlinNoise.GetHeightValues(xLength, zLength, flatAreaSettings));
+        float[,] heightmap = perlinNoise.GetHeightValues(xLength, zLength, cellSize, cellWallSize, slopeAngle);
 
         terrainData.size = new Vector3(xLength, perlinNoise.MaxPerlinNoiseValue, zLength);
         terrainData.alphamapResolution = xLength;
@@ -46,21 +45,6 @@ public class TerrainController : MonoBehaviour
 
         terrainData.SetAlphamaps(0, 0, GetAlphamap(terrainData, heightmap));
         terrainMesh.Flush();
-    }
-
-    private float[,] GetHeightmap(float[,] heightValues)
-    {
-        float[,] result = new float[xLength, zLength];
-
-        for (int z = 0; z < zLength; z++)
-        {
-            for (int x = 0; x < xLength; x++)
-            {
-                result[x, z] = Mathf.InverseLerp(perlinNoise.MinPerlinNoiseValue, perlinNoise.MaxPerlinNoiseValue, heightValues[x, z]);
-            }
-        }
-
-        return result;
     }
 
     private float[,,] GetAlphamap(TerrainData terrainData, float[,] heightmap)

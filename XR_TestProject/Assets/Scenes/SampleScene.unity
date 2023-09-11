@@ -617,7 +617,7 @@ Terrain:
   m_TreeMaximumFullLODCount: 50
   m_DetailObjectDistance: 80
   m_DetailObjectDensity: 1
-  m_HeightmapPixelError: 5
+  m_HeightmapPixelError: 1
   m_SplatMapDistance: 1000
   m_HeightmapMaximumLOD: 0
   m_ShadowCastingMode: 2
@@ -681,7 +681,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1286406410}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1000, y: 9, z: 1000}
+  m_LocalPosition: {x: 250, y: 26.1, z: 222.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -775,7 +775,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1623394919}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1000, y: 9, z: 1000}
+  m_LocalPosition: {x: 250, y: 26.100002, z: 222.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -813,45 +813,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   terrainMesh: {fileID: 1268908802}
-  terrainSize: 500
-  groundHeightPercent: 0.04
-  minBetweenPercent: 0.02
-  maxBetweenPercent: 0.25
+  terrainSize: 1000
+  cellSize: 50
+  cellWallSize: 4
+  slopeAngle: 6
   perlinNoise:
-    MinPerlinNoiseValue: 0
-    MaxPerlinNoiseValue: 116.36641
-    xScale: 0.002
+    MinPerlinNoiseValue: -6.9324784
+    xScale: 0.015
     xCoordOffset: 0
-    zScale: 0.002
+    zScale: 0.015
     zCoordOffset: 0
-    yScale: 200
-    scaleMultiplier: 3
+    yScale: 20
   terrainLayerData:
   - terrainLayerArrayIndex: 0
-    terrainLayerArrayLength: 5
-    terrainLayerName: WaterColor
-    HeightPosition: 0.03
-    BlendPercent: 0.526
+    terrainLayerArrayLength: 2
+    terrainLayerName: Grass_Moss_TerrainLayer
+    HeightPosition: 0
+    BlendPercent: 0.2
   - terrainLayerArrayIndex: 1
-    terrainLayerArrayLength: 5
-    terrainLayerName: GrassColor
-    HeightPosition: 0.05
-    BlendPercent: 0.183
-  - terrainLayerArrayIndex: 2
-    terrainLayerArrayLength: 5
-    terrainLayerName: DirtColor
-    HeightPosition: 0.35
-    BlendPercent: 0.1
-  - terrainLayerArrayIndex: 3
-    terrainLayerArrayLength: 5
-    terrainLayerName: StoneColor
-    HeightPosition: 0.686
-    BlendPercent: 0.512
-  - terrainLayerArrayIndex: 4
-    terrainLayerArrayLength: 5
-    terrainLayerName: SnowColor
+    terrainLayerArrayLength: 2
+    terrainLayerName: Rock_TerrainLayer
     HeightPosition: 1
-    BlendPercent: 0
+    BlendPercent: 0.25
 --- !u!4 &1954059258
 Transform:
   m_ObjectHideFlags: 0
