@@ -8,8 +8,9 @@ public class TerrainController : MonoBehaviour
     [SerializeField] private int terrainSize = 1000;
 
     [Header("Grid settings")]
-    [SerializeField] private int cellSize = 20;
-    [SerializeField] private int cellWallSize = 5;
+    [SerializeField] private int cellSize = 50;
+    [SerializeField] private int cellWallSize = 4;
+    [SerializeField] private int cellWallHeight = 20;
 
     [Space(10)]
     [SerializeField] private PerlinNoise perlinNoise;
@@ -23,7 +24,7 @@ public class TerrainController : MonoBehaviour
     private int gridZLength;
 
     [SerializeField, HideInInspector] private CellDataShared cellDataShared;
-    [SerializeField, HideInInspector] private CellData[,] cellData;
+    [SerializeField, HideInInspector] private bool[,] cellsInsideMaze;
 
     public void GenerateTerrain()
     {
@@ -34,16 +35,20 @@ public class TerrainController : MonoBehaviour
         zLength = terrainData.heightmapResolution;
 
         GenerateHeightValues();
+        GenerateMaze();
 
-        terrainData.size = new Vector3(xLength, perlinNoise.MaxPerlinNoiseValue, zLength);
+        terrainData.size = new Vector3(xLength, cellWallHeight, zLength);
         terrainData.alphamapResolution = xLength;
         terrainData.SetHeights(0, 0, heightmap);
+        terrainData.SetAlphamaps(0, 0, GetAlphamaps());
         terrainMesh.Flush();
     }
 
     private void GenerateHeightValues()
     {
         heightmap = new float[xLength, zLength];
+        gridXLength = xLength / cellSize;
+        gridZLength = zLength / cellSize;
 
         cellDataShared = new CellDataShared
         {
@@ -56,7 +61,7 @@ public class TerrainController : MonoBehaviour
 
         bool dataCollected = false;
 
-        cellData = new CellData[gridXLength, gridZLength];
+        cellsInsideMaze = new bool[gridXLength, gridZLength];
 
         for (int z = 0; z < gridZLength; z++)
         {
@@ -104,6 +109,85 @@ public class TerrainController : MonoBehaviour
         cellDataShared.CellsOriginalHeight[x, z] = heightValue;
     }
 
+    private void GenerateMaze()
+    {
+        List<Vector2Int> cells = new();
+        int cellsAmount = 0;
+
+        Vector2Int currentCoord = Vector2Int.zero;
+
+        cellsInsideMaze[0, 0] = true;
+
+        for (int i = 0; i < cellsInsideMaze.Length; i++)
+        {
+            Vector2Int topNextPos = new(currentCoord.x, currentCoord.y + 1);
+            Vector2Int bottomNextPos = new(currentCoord.x, currentCoord.y - 1);
+            Vector2Int leftNextPos = new(currentCoord.x - 1, currentCoord.y);
+            Vector2Int rightNextPos = new(currentCoord.x + 1, currentCoord.y);
+
+            bool topAvailable = topNextPos.y < gridZLength && !cellsInsideMaze[topNextPos.x, topNextPos.y];
+            bool bottomAvailable = bottomNextPos.y >= 0 && !cellsInsideMaze[bottomNextPos.x, bottomNextPos.y];
+            bool leftAvailable = leftNextPos.x >= 0 && !cellsInsideMaze[leftNextPos.x, leftNextPos.y];
+            bool rightAvailable = rightNextPos.x < gridXLength && !cellsInsideMaze[rightNextPos.x, rightNextPos.y];
+            
+            if (!topAvailable && !bottomAvailable && !leftAvailable && !rightAvailable)
+            {
+                for (int x = cellsAmount - 1; x > 0; x--)
+                {
+                    currentCoord = cells[x];
+
+                    topNextPos = new(currentCoord.x, currentCoord.y + 1);
+                    bottomNextPos = new(currentCoord.x, currentCoord.y - 1);
+                    leftNextPos = new(currentCoord.x - 1, currentCoord.y);
+                    rightNextPos = new(currentCoord.x + 1, currentCoord.y);
+
+                    topAvailable = topNextPos.y < gridZLength && !cellsInsideMaze[topNextPos.x, topNextPos.y];
+                    bottomAvailable = bottomNextPos.y >= 0 && !cellsInsideMaze[bottomNextPos.x, bottomNextPos.y];
+                    leftAvailable = leftNextPos.x >= 0 && !cellsInsideMaze[leftNextPos.x, leftNextPos.y];
+                    rightAvailable = rightNextPos.x < gridXLength && !cellsInsideMaze[rightNextPos.x, rightNextPos.y];
+
+                    if (topAvailable || bottomAvailable || leftAvailable || rightAvailable) break;
+                }
+            }
+
+            float topHeight = perlinNoise.GetPerlinNoiseValue(topNextPos);
+            float bottomHeight = perlinNoise.GetPerlinNoiseValue(bottomNextPos);
+            float leftHeight = perlinNoise.GetPerlinNoiseValue(leftNextPos);
+            float rightHeight = perlinNoise.GetPerlinNoiseValue(rightNextPos);
+
+            float currentHeight = 0;
+            Vector2Int currentNextCoord = Vector2Int.zero;
+            
+            if (topAvailable)
+            {
+                currentHeight = topHeight;
+                currentNextCoord = topNextPos;
+            }
+            if (bottomAvailable && bottomHeight > currentHeight)
+            {
+                currentHeight = bottomHeight;
+                currentNextCoord = bottomNextPos;
+            }
+            if (leftAvailable && leftHeight > currentHeight)
+            {
+                currentHeight = leftHeight;
+                currentNextCoord = leftNextPos;
+            }
+            if (rightAvailable && rightHeight > currentHeight)
+            {
+                currentNextCoord = rightNextPos;
+            }
+
+            RemoveWallBetweenCells(currentCoord, currentNextCoord);
+
+            cells.Add(currentNextCoord);
+            cellsAmount = cells.Count;
+
+            currentCoord = currentNextCoord;
+            cellsInsideMaze[currentCoord.x, currentCoord.y] = true;
+        }
+    }
+
     private void RemoveWallBetweenCells(Vector2Int cellCoord_1, Vector2Int cellCoord_2)
     {
         CellDataShared.WallDirection cellWall_1 = GetWallDirection(cellCoord_1, cellCoord_2);
@@ -132,5 +216,25 @@ public class TerrainController : MonoBehaviour
 
             heightmap[coordX, coordZ] = 0;
         }
+    }
+
+    private float[,,] GetAlphamaps()
+    {
+        TerrainLayer[] terrainLayers = terrainMesh.terrainData.terrainLayers;
+        float[,,] alphamaps = new float[xLength, zLength, terrainLayers.Length];
+
+        for (int z = 0; z < zLength; z++)
+        {
+            for (int x = 0; x < xLength; x++)
+            {
+                for (int i = 0; i < terrainLayers.Length; i++) alphamaps[x, z, i] = 0f;
+
+                float heightValue = heightmap[x, z];
+                alphamaps[x, z, 0] = heightValue == 0 ? 1 : 0;
+                alphamaps[x, z, 1] = heightValue == 1 ? 1 : 0;
+            }
+        }
+
+        return alphamaps;
     }
 }

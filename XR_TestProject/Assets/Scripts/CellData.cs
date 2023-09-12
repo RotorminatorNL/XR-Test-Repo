@@ -1,12 +1,6 @@
 using System.Collections.Generic;
 
 [System.Serializable]
-public class CellData
-{
-
-}
-
-[System.Serializable]
 public class CellDataShared
 {
     public enum WallDirection { Top, Bottom, Left, Right }
