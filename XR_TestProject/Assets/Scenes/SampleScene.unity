@@ -579,7 +579,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 127
   m_IsActive: 1
 --- !u!154 &1268908801
 TerrainCollider:
@@ -618,11 +618,11 @@ Terrain:
   m_DetailObjectDistance: 80
   m_DetailObjectDensity: 1
   m_HeightmapPixelError: 1
-  m_SplatMapDistance: 1000
+  m_SplatMapDistance: 5468
   m_HeightmapMaximumLOD: 0
   m_ShadowCastingMode: 2
   m_DrawHeightmap: 1
-  m_DrawInstanced: 0
+  m_DrawInstanced: 1
   m_DrawTreesAndFoliage: 1
   m_StaticShadowCaster: 0
   m_IgnoreQualitySettings: 0
@@ -681,7 +681,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1286406410}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 250, y: 26.1, z: 222.6}
+  m_LocalPosition: {x: 21.72, y: 1.24, z: 23.39}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -775,7 +775,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1623394919}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 250, y: 26.100002, z: 222.6}
+  m_LocalPosition: {x: 21.719997, y: 1.2400019, z: 23.390005}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -816,7 +816,6 @@ MonoBehaviour:
   terrainSize: 1000
   cellSize: 50
   cellWallSize: 4
-  slopeAngle: 6
   perlinNoise:
     MinPerlinNoiseValue: -6.9324784
     xScale: 0.015
@@ -824,17 +823,11 @@ MonoBehaviour:
     zScale: 0.015
     zCoordOffset: 0
     yScale: 20
-  terrainLayerData:
-  - terrainLayerArrayIndex: 0
-    terrainLayerArrayLength: 2
-    terrainLayerName: Grass_Moss_TerrainLayer
-    HeightPosition: 0
-    BlendPercent: 0.2
-  - terrainLayerArrayIndex: 1
-    terrainLayerArrayLength: 2
-    terrainLayerName: Rock_TerrainLayer
-    HeightPosition: 1
-    BlendPercent: 0.25
+  cellDataShared:
+    TopWallCoords: []
+    BottomWallCoords: []
+    LeftWallCoords: []
+    RightWallCoords: []
 --- !u!4 &1954059258
 Transform:
   m_ObjectHideFlags: 0
