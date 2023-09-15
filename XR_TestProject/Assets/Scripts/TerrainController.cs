@@ -1,6 +1,10 @@
 using System.Collections.Generic;
+using UnityEditor.SceneManagement;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
+[System.Serializable]
 public class TerrainController : MonoBehaviour
 {
     [SerializeField] private Terrain terrainMesh;
@@ -16,11 +20,11 @@ public class TerrainController : MonoBehaviour
     [SerializeField] private GameObject clickableCubePrefab;
 
     [Space(10), SerializeField] private PerlinNoise perlinNoise;
-
-    private int gridSize;
+    
     private readonly int cellWallAmount = 4; 
     private float[,] heightmap;
 
+    [SerializeField, HideInInspector] private int gridSize;
     [SerializeField, HideInInspector] private CellDataShared cellDataShared;
 
     public void GenerateTerrain()
