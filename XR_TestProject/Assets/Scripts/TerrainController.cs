@@ -213,44 +213,42 @@ public class TerrainController : MonoBehaviour
     private void GenerateClickableCubes()
     {
         int gridClickableCubeLength = gridSize * 2;
-        int newCellSize = cellSize / 2;
+        float newCellSize = cellSize / 2f;
         for (int z = 0; z <= gridClickableCubeLength; z++)
         {
             for (int x = 0; x <= gridClickableCubeLength; x++)
             {
                 if (x % 2 == 1 && z % 2 == 1) continue;
 
-                float newX = x * newCellSize + transform.position.z;
-                float newZ = z * newCellSize + transform.position.x;
-                Vector3 newScale = new(newCellSize / 5, 1, newCellSize / 5);
+                float[] gridAxes = new float[] {x, z};
+                float[] cubeAxes = new float[2];
+                Vector3 cubeScale = new(cellWallSize, 1, cellWallSize);
 
-                int gridX = x < gridClickableCubeLength ? x * newCellSize : x * newCellSize - 1;
-                int gridZ = z < gridClickableCubeLength ? z * newCellSize : z * newCellSize - 1;
-                bool state = heightmap[gridX, gridZ] == 1;
-
-                if (x % 2 == 1 || z % 2 == 1)
+                for (int i = 0; i < gridAxes.Length; i++)
                 {
-                    newX = x * newCellSize + transform.position.z;
-                    newZ = z * newCellSize + transform.position.x;
+                    cubeAxes[i] = (gridAxes[i] + (gridAxes[i] / (terrainSize - 1f))) * newCellSize;
+                    if(gridAxes[i] != 0) cubeAxes[i] -= gridAxes[i] != gridClickableCubeLength ? 0.5f : 1f;
 
-                    newScale = new Vector3(newCellSize / 4, 1, newCellSize);
-                    if (z % 2 == 1) newScale = new Vector3(newCellSize, 1, newCellSize / 4);
+                    if (gridAxes[i] % 2 == 1) cubeScale = gridAxes[i] == x ? new Vector3(cellWallSize, 1, newCellSize) : new Vector3(newCellSize, 1, cellWallSize);
                 }
 
-                GameObject cube = Instantiate(clickableCubePrefab, new(newZ, cellWallHeight + 2, newX), Quaternion.identity, clickableCubesParent);
-                cube.transform.localScale = newScale;
-                cube.GetComponent<ClickableCube>().SetData(this, new Vector2Int(x, z), state);
+                Vector3 cubeCoord = new(cubeAxes[1] + transform.position.z, cellWallHeight + 0.5f, cubeAxes[0] + transform.position.x);
+                bool cubeState = heightmap[Mathf.RoundToInt(cubeAxes[0] - 0.5f), Mathf.RoundToInt(cubeAxes[1] - 0.5f)] == 1;
+
+                GameObject cube = Instantiate(clickableCubePrefab, cubeCoord, Quaternion.identity, clickableCubesParent);
+                cube.transform.localScale = cubeScale;
+                cube.GetComponent<ClickableCube>().SetData(this, new Vector2Int(x, z), cubeState);
             }
         }
     }
 
-    public void ChangeStateOfWalls(Vector2Int[] wallCenterCoord, bool automatic = true, bool state = false)
+    public void ChangeStateOfWalls(Vector2Int[] wallCenterCoords, bool automatic = true, bool state = false)
     {
         heightmap ??= terrainMesh.terrainData.GetHeights(0, 0, terrainSize, terrainSize);
 
-        for (int i = 0; i < wallCenterCoord.Length; i++)
+        for (int i = 0; i < wallCenterCoords.Length; i++)
         {
-            Vector2Int[] wallCoords = GetWallCoords(wallCenterCoord[i]);
+            Vector2Int[] wallCoords = GetWallCoords(wallCenterCoords[i]);
             for (int x = wallCoords[0].x; x < wallCoords[0].y; x++)
             {
                 for (int z = wallCoords[1].x; z < wallCoords[1].y; z++)
@@ -270,21 +268,23 @@ public class TerrainController : MonoBehaviour
         int[] wallCenterCoords = new int[] { wallCenterCoord.y, wallCenterCoord.x };
 
         int gridClickableCubeLength = gridSize * 2;
-        int newCellSize = cellSize / 2;
+        float newCellSize = cellSize / 2f;
 
         for (int i = 0; i < wallCoords.Length; i++)
         {
-            wallCoords[i].x = -cellWallSize + wallCenterCoords[i] * newCellSize;
-            wallCoords[i].y = cellWallSize + wallCenterCoords[i] * newCellSize;
+            int flooredCoord = Mathf.FloorToInt(wallCenterCoords[i] * newCellSize);
+
+            wallCoords[i].x = -cellWallSize + flooredCoord;
+            wallCoords[i].y = cellWallSize + flooredCoord;
 
             if (wallCenterCoords[i] % 2 == 1)
             {
-                wallCoords[i].x = wallCenterCoords[i] * newCellSize - ((cellSize / 2) - cellWallSize);
-                wallCoords[i].y = wallCenterCoords[i] * newCellSize + ((cellSize / 2) - cellWallSize);
+                wallCoords[i].x = flooredCoord - (Mathf.FloorToInt(cellSize / 2f) - cellWallSize);
+                wallCoords[i].y = flooredCoord + (Mathf.CeilToInt(cellSize / 2f) - cellWallSize);
             }
 
             if (wallCenterCoords[i] == 0) wallCoords[i].x = 0;
-            if (wallCenterCoords[i] == gridClickableCubeLength) wallCoords[i].y = wallCenterCoords[i] * newCellSize;
+            if (wallCenterCoords[i] == gridClickableCubeLength) wallCoords[i].y = flooredCoord;
         }
 
         return wallCoords;
