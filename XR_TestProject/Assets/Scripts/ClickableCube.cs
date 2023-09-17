@@ -8,17 +8,25 @@ using UnityEngine.SceneManagement;
 [System.Serializable]
 public class ClickableCube : MonoBehaviour
 {
+    public enum TerrainState
+    {
+        Wall,
+        Ground,
+        Hole
+    }
+
     public MeshRenderer MeshRenderer => meshRenderer;
     public Vector2Int CellCoord => cellCoord;
-    public bool State { set { state = value; } }
+    public TerrainState State { set { state = value; } }
     [SerializeField] private MeshRenderer meshRenderer;
-    [SerializeField] private Material stateFalseMat;
-    [SerializeField] private Material stateTrueMat;
+    [SerializeField] private Material stateWallMat;
+    [SerializeField] private Material stateGroundMat;
+    [SerializeField] private Material stateHoleMat;
     [HideInInspector, SerializeField] private TerrainController terrainController;
     [HideInInspector, SerializeField] private Vector2Int cellCoord;
-    [HideInInspector, SerializeField] private bool state;
+    [HideInInspector, SerializeField] private TerrainState state;
 
-    public void SetData(TerrainController terrainController, Vector2Int cellCoord, bool state)
+    public void SetData(TerrainController terrainController, Vector2Int cellCoord, TerrainState state)
     {
         this.terrainController = terrainController;
         this.cellCoord = cellCoord;
@@ -26,10 +34,10 @@ public class ClickableCube : MonoBehaviour
         ChangeMaterial();
     }
 
-    public void ChangeStateOfWall()
+    public void ChangeStateOfWall(TerrainState state)
     {
-        terrainController.ChangeStateOfWalls(new Vector2Int[] { cellCoord });
-        state = !state;
+        terrainController.ChangeStateOfWalls(new Vector2Int[] { cellCoord }, false, state);
+        this.state = state;
         ChangeMaterial();
 
         #if UNITY_EDITOR
@@ -38,7 +46,7 @@ public class ClickableCube : MonoBehaviour
         #endif
     }
 
-    public void ChangeStateOfWalls(ClickableCube[] cubes, bool state)
+    public void ChangeStateOfWalls(ClickableCube[] cubes, TerrainState state)
     {
         Vector2Int[] cellCoords = new Vector2Int[cubes.Length];
         for (int i = 0; i < cubes.Length; i++)
@@ -61,6 +69,8 @@ public class ClickableCube : MonoBehaviour
 
     public void ChangeMaterial()
     {
-        meshRenderer.material = state ? stateTrueMat : stateFalseMat;
+        if (state == TerrainState.Wall) meshRenderer.material = stateWallMat;
+        else if (state == TerrainState.Ground) meshRenderer.material = stateGroundMat;
+        else meshRenderer.material = stateHoleMat;
     }
 }

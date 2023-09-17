@@ -13,9 +13,21 @@ public class ClickableCube_Inspector : Editor
         
         DrawDefaultInspector();
 
+        GUILayout.Space(10);
+        GUILayout.BeginHorizontal(); 
+        GUILayout.FlexibleSpace(); 
+        GUI.skin.label.fontSize = 20;
+        GUILayout.Label("Terrain states");
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+
         if (targets.Length == 1)
         {
-            if (GUILayout.Button("Change state", GUILayout.Height(30))) targetClickableCube.ChangeStateOfWall();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Wall", GUILayout.Height(30))) targetClickableCube.ChangeStateOfWall(ClickableCube.TerrainState.Wall);
+            if (GUILayout.Button("Ground", GUILayout.Height(30))) targetClickableCube.ChangeStateOfWall(ClickableCube.TerrainState.Ground);
+            if (GUILayout.Button("Hole", GUILayout.Height(30))) targetClickableCube.ChangeStateOfWall(ClickableCube.TerrainState.Hole);
+            GUILayout.EndHorizontal();
         }
         else
         {
@@ -28,8 +40,11 @@ public class ClickableCube_Inspector : Editor
                 cubes[targetIndex++] = clickableCube;
             }
 
-            if (GUILayout.Button("Add walls", GUILayout.Height(30))) targetClickableCube.ChangeStateOfWalls(cubes, true);
-            if (GUILayout.Button("Remove walls", GUILayout.Height(30))) targetClickableCube.ChangeStateOfWalls(cubes, false);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("All walls", GUILayout.Height(30))) targetClickableCube.ChangeStateOfWalls(cubes, ClickableCube.TerrainState.Wall);
+            if (GUILayout.Button("All ground", GUILayout.Height(30))) targetClickableCube.ChangeStateOfWalls(cubes, ClickableCube.TerrainState.Ground);
+            if (GUILayout.Button("All holes", GUILayout.Height(30))) targetClickableCube.ChangeStateOfWalls(cubes, ClickableCube.TerrainState.Hole);
+            GUILayout.EndHorizontal();
         }
     }
 }

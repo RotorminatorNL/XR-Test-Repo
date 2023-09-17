@@ -47,8 +47,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   meshRenderer: {fileID: 2342742947221047989}
-  stateFalseMat: {fileID: 2100000, guid: 3e0f8e262554aae4593d3b9d5a592123, type: 2}
-  stateTrueMat: {fileID: 2100000, guid: f80471023f879b749a4de011dad58a52, type: 2}
+  stateWallMat: {fileID: 2100000, guid: f80471023f879b749a4de011dad58a52, type: 2}
+  stateGroundMat: {fileID: 2100000, guid: fdc7c1da382c37a4284d2542e784a4c2, type: 2}
+  stateHoleMat: {fileID: 2100000, guid: 3e0f8e262554aae4593d3b9d5a592123, type: 2}
   terrainController: {fileID: 0}
   cellCoord: {x: 0, y: 0}
   state: 0

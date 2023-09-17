@@ -3,6 +3,7 @@ using UnityEditor.SceneManagement;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static ClickableCube;
 
 [System.Serializable]
 public class TerrainController : MonoBehaviour
@@ -14,14 +15,13 @@ public class TerrainController : MonoBehaviour
     [SerializeField] private int cellSize = 50;
     [SerializeField] private int cellWallSize = 4;
     [SerializeField] private int cellWallHeight = 20;
+    [SerializeField] private int cellGroundHeight = 10;
 
     [Header("Clickable cells")]
     [SerializeField] private Transform clickableCubesParent;
     [SerializeField] private GameObject clickableCubePrefab;
 
     [Space(10), SerializeField] private PerlinNoise perlinNoise;
-    
-    private readonly int cellWallAmount = 4; 
     private float[,] heightmap;
 
     [SerializeField, HideInInspector] private int gridSize;
@@ -85,7 +85,7 @@ public class TerrainController : MonoBehaviour
     private float GetHeightValue(int x, int z)
     {
         if (x < cellWallSize || x >= cellSize - cellWallSize || z < cellWallSize || z >= cellSize - cellWallSize) return 1;
-        return 0;
+        return 1f / cellWallHeight * cellGroundHeight;
     }
 
     private void SetCellDataShare(int x, int z, float heightValue)
@@ -178,7 +178,7 @@ public class TerrainController : MonoBehaviour
             int coordX = int.Parse(coordArray[0]) + cellSize * cellCoord.x;
             int coordZ = int.Parse(coordArray[1]) + cellSize * cellCoord.y;
 
-            heightmap[coordX, coordZ] = 0;
+            heightmap[coordX, coordZ] = 1f / cellWallHeight * cellGroundHeight;
         }
     }
 
@@ -202,8 +202,8 @@ public class TerrainController : MonoBehaviour
                 for (int i = 0; i < terrainMesh.terrainData.terrainLayers.Length; i++) alphamaps[x, z, i] = 0f;
 
                 float heightValue = heightmap[x, z];
-                alphamaps[x, z, 0] = heightValue == 0 ? 1 : 0;
-                alphamaps[x, z, 1] = heightValue == 1 ? 1 : 0;
+                alphamaps[x, z, 0] = heightValue == 1f / cellWallHeight * cellGroundHeight ? 1 :1f / cellWallHeight * cellGroundHeight;
+                alphamaps[x, z, 1] = heightValue == 1 ? 1 : 1f / cellWallHeight * cellGroundHeight;
             }
         }
 
@@ -218,8 +218,6 @@ public class TerrainController : MonoBehaviour
         {
             for (int x = 0; x <= gridClickableCubeLength; x++)
             {
-                if (x % 2 == 1 && z % 2 == 1) continue;
-
                 float[] gridAxes = new float[] {x, z};
                 float[] cubeAxes = new float[2];
                 Vector3 cubeScale = new(cellWallSize, 1, cellWallSize);
@@ -232,8 +230,11 @@ public class TerrainController : MonoBehaviour
                     if (gridAxes[i] % 2 == 1) cubeScale = gridAxes[i] == x ? new Vector3(cellWallSize, 1, newCellSize) : new Vector3(newCellSize, 1, cellWallSize);
                 }
 
+                if (x % 2 == 1 && z % 2 == 1) cubeScale = new Vector3(newCellSize, 1, newCellSize);
+
                 Vector3 cubeCoord = new(cubeAxes[1] + transform.position.z, cellWallHeight + 0.5f, cubeAxes[0] + transform.position.x);
-                bool cubeState = heightmap[Mathf.RoundToInt(cubeAxes[0] - 0.5f), Mathf.RoundToInt(cubeAxes[1] - 0.5f)] == 1;
+                float heightValue = heightmap[Mathf.RoundToInt(cubeAxes[0] - 0.5f), Mathf.RoundToInt(cubeAxes[1] - 0.5f)];
+                TerrainState cubeState = heightValue == 1 ? TerrainState.Wall : TerrainState.Ground;
 
                 GameObject cube = Instantiate(clickableCubePrefab, cubeCoord, Quaternion.identity, clickableCubesParent);
                 cube.transform.localScale = cubeScale;
@@ -242,7 +243,7 @@ public class TerrainController : MonoBehaviour
         }
     }
 
-    public void ChangeStateOfWalls(Vector2Int[] wallCenterCoords, bool automatic = true, bool state = false)
+    public void ChangeStateOfWalls(Vector2Int[] wallCenterCoords, bool automatic = true, TerrainState state = TerrainState.Wall)
     {
         heightmap ??= terrainMesh.terrainData.GetHeights(0, 0, terrainSize, terrainSize);
 
@@ -253,8 +254,17 @@ public class TerrainController : MonoBehaviour
             {
                 for (int z = wallCoords[1].x; z < wallCoords[1].y; z++)
                 {
-                    if (automatic) heightmap[z, x] = 1 - heightmap[z, x];
-                    else heightmap[z, x] = state ? 1 : 0;
+                    if (automatic)
+                    {
+                        if (heightmap[z, x] == 1f / cellWallHeight * cellGroundHeight) heightmap[z, x] = 1;
+                        else heightmap[z, x] = 1f / cellWallHeight * cellGroundHeight;
+                    }
+                    else
+                    {
+                        if (state == TerrainState.Wall) heightmap[z, x] = 1;
+                        else if (state == TerrainState.Ground) heightmap[z, x] = 1f / cellWallHeight * cellGroundHeight;
+                        else heightmap[z, x] = 0;
+                    }
                 }
             }
         }
