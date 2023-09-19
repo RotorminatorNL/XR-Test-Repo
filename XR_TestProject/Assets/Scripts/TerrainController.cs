@@ -225,7 +225,7 @@ public class TerrainController : MonoBehaviour
                 for (int i = 0; i < gridAxes.Length; i++)
                 {
                     cubeAxes[i] = (gridAxes[i] + (gridAxes[i] / (terrainSize - 1f))) * newCellSize;
-                    if(gridAxes[i] != 0) cubeAxes[i] -= gridAxes[i] != gridClickableCubeLength ? 0.5f : 1f;
+                    if (gridAxes[i] != 0) cubeAxes[i] -= gridAxes[i] != gridClickableCubeLength ? 0.5f : 1f;
 
                     if (gridAxes[i] % 2 == 1) cubeScale = gridAxes[i] == x ? new Vector3(cellWallSize, 1, newCellSize) : new Vector3(newCellSize, 1, cellWallSize);
                 }
@@ -233,7 +233,12 @@ public class TerrainController : MonoBehaviour
                 if (x % 2 == 1 && z % 2 == 1) cubeScale = new Vector3(newCellSize, 1, newCellSize);
 
                 Vector3 cubeCoord = new(cubeAxes[1] + transform.position.z, cellWallHeight + 0.5f, cubeAxes[0] + transform.position.x);
-                float heightValue = heightmap[Mathf.RoundToInt(cubeAxes[0] - 0.5f), Mathf.RoundToInt(cubeAxes[1] - 0.5f)];
+
+                int heightValueX = Mathf.RoundToInt(cubeAxes[0] - 0.5f);
+                int heightValueY = Mathf.RoundToInt(cubeAxes[1] - 0.5f);
+                heightValueX = heightValueX >= terrainSize - 0.5f ? terrainSize - 1 : heightValueX;
+                heightValueY = heightValueY >= terrainSize - 0.5f ? terrainSize - 1 : heightValueY;
+                float heightValue = heightmap[heightValueX, heightValueY];
                 TerrainState cubeState = heightValue == 1 ? TerrainState.Wall : TerrainState.Ground;
 
                 GameObject cube = Instantiate(clickableCubePrefab, cubeCoord, Quaternion.identity, clickableCubesParent);
